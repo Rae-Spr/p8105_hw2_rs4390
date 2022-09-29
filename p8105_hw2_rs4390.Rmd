@@ -1,0 +1,12 @@
+---
+title: "p8105_hw2_rs4390"
+author: "Rae Spriggs"
+date: "2022-09-29"
+output: github_document
+---
+
+```{r setup}
+library(tidyverse)
+```
+
+## R Markdown
