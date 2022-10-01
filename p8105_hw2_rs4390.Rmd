@@ -16,15 +16,14 @@ library(dplyr)
 transit_df = read_csv('data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv') %>% 
   janitor::clean_names() %>% 
   select(line, station_name, station_latitude, station_longitude, route1:route11, entry, vending, entrance_type, ada) %>% 
-  mutate(entry = ifelse(entry == "YES", TRUE, FALSE))
+  mutate(entry = ifelse(entry == "YES", TRUE, FALSE)) %>%
+  mutate_at(c('route8', 'route9', 'route10', 'route11'), as.character) 
 
-## checking the type of variable
-typeof(transit_df$entry)
 ```
 
 ## Dataset description 
 
-The transit_df dataset contains `r nrow(transit_df)` observations of individual New York City transit subway entrances and/or exits. There are `r ncol(transit_df)` total variables that detail the name of the transit lines b, transit station names, station latitudes and longitudes, route numbers served, whether or not the exit also doubles as an entrance, vending access, entrance type, and ADA compliance. To clean the data, I used the `clean_names` function from the `janitor` package to make all variable names lowercase and snake_case. Then, I selected for the variables of interest listed above. The resulting dataset has dimensions described above, which are 1868 rows x 19 columns. This dataset is now tidy because all the columns are variables, all the rows are observations, and every value has a cell. 
+The transit_df dataset contains `r nrow(transit_df)` observations of individual New York City transit subway entrances and/or exits. There are `r ncol(transit_df)` total variables that detail the name of the transit lines, transit station names, station latitudes and longitudes, route numbers served, whether or not the exit also doubles as an entrance, vending access, entrance type, and ADA compliance. To clean the data, I used the `clean_names` function from the `janitor` package to make all variable names lowercase and snake_case. Then, I selected for the variables of interest listed above. I mutated the variable types for routes 8-11, so they would also be character variables. The resulting dataset has dimensions described above, which are 1868 rows x 19 columns. This dataset is not tidy because the columns are not all variables. Route number should be a variable. In order to tidy the dataset, we will need to use `pivot_longer`. 
 
 ## How many distinct stations? 
 
@@ -65,13 +64,18 @@ Around 37.7% of stations without vending machines also have entry access.
 
 ```{r}
 line_route_df = transit_df %>% 
-  distinct(line, route1, route2, route3, route4, route5, route6, route7, route8, route9, route10, route11, .keep_all = TRUE)
+   pivot_longer(
+   route1:route11,
+    names_to = "route_num",
+    values_to = "route") %>% 
+  filter(route == "A")
 
-A_line_df = line_route_df %>% 
-  filter(route1 == "A" | route2 == "A" | route3 == "A" | route4 == "A" | route5 == "A" | route6 == "A" | route7 == "A" | route8 == "A" | route9 == "A" | route10 == "A" | route11 == "A")
+distinct_A = line_route_df %>% 
+  select(station_name, line, ada) %>% 
+  distinct() 
 
-ADA_A_df = A_line_df %>% 
+ADA_A_df = distinct_A %>% 
   filter(ada == TRUE)
 ```
-30 distinct stations serve the A train, and of those 14 of them are ADA compliant. 
+60 distinct stations serve the A train, and of those 17 of them are ADA compliant. 
 
